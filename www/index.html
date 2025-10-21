@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
+    <title>MyApp</title>
+</head>
+<body>
+    <h1>Загрузка...</h1>
+
+    <script src="cordova.js"></script>
+    <script>
+        document.addEventListener('deviceready', function() {
+            var url = "http://62.89.3.242:9000";
+
+            // Загружаем сайт прямо в приложение, без адресной строки
+            cordova.InAppBrowser.open(url, "_self", "location=no,toolbar=no");
+        }, false);
+    </script>
+</body>
+</html>
