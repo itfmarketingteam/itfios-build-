@@ -2,10 +2,25 @@
   "expo": {
     "name": "MyITFApp",
     "slug": "my-itf-app",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "version": "2.0.0",
     "ios": {
-      "bundleIdentifier": "com.sergey930501.myitfapp"
+      "bundleIdentifier": "com.sergey930501.myitfapp",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+     "android": {
+      "package": "com.example.mycordovaapp"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c49c31a9-0a41-4195-9ccb-cc28dad6e7fb"
+      }
     }
   }
 }

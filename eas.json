@@ -4,7 +4,9 @@
   },
   "build": {
     "production": {
-      "ios": {}
+      "ios": {
+        "simulator": false
+      }
     }
   }
 }
