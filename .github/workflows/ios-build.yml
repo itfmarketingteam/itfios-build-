@@ -2,7 +2,8 @@ name: Build iOS
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build-ios:
@@ -10,28 +11,41 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Use Node.js 20
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
       - name: Install dependencies
-        run: |
-          npm ci
-          npm install -g @capacitor/cli
+        run: npm install
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
 
       - name: Install CocoaPods
-        run: |
-          sudo gem install cocoapods
-          cd ios/App
-          pod install
+        run: pod install --project-directory=ios/App
 
-      - name: Build iOS
+      - name: Build iOS .ipa
         run: |
           cd ios/App
           mkdir -p build
-          xcodebuild -workspace MyApp.xcworkspace \
-            -scheme MyApp \
+          # Схема и workspace будут автоматически найдены через 'xcodebuild -list'
+          WORKSPACE=$(ls *.xcworkspace | head -n 1)
+          SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | grep -A1 "Schemes:" | tail -n1 | xargs)
+          echo "Using workspace: $WORKSPACE"
+          echo "Using scheme: $SCHEME"
+          xcodebuild -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
             -sdk iphoneos \
             -configuration Release \
-            archive -archivePath build/MyApp.xcarchive
+            archive -archivePath build/App.xcarchive
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportOptionsPlist exportOptions.plist \
+            -exportPath build
+
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: myapp-ipa
+          path: ios/App/build/*.ipa
