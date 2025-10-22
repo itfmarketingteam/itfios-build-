@@ -1,12 +1,26 @@
 {
   "cli": {
-    "version": ">= 3.17.0"
+    "version": ">= 3.38.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "production": {
       "ios": {
-        "simulator": false
+        "releaseChannel": "production",
+        "distribution": "store",
+        "autoIncrement": true
+      },
+      "android": {
+        "releaseChannel": "production"
       }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "hello@itfllc.am"
+      },
+      "android": {}
     }
   }
 }
