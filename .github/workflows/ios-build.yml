@@ -3,44 +3,44 @@ name: Build iOS Cordova
 on:
   push:
     branches:
-      - main  # билд будет запускаться при пуше в main
+      - main
 
 jobs:
   build:
     runs-on: macos-latest
 
     steps:
-      # Клонируем репозиторий
+      # 1. Клонируем репозиторий
       - uses: actions/checkout@v3
 
-      # Устанавливаем Node.js
-      - name: Setup Node
+      # 2. Устанавливаем Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      # Устанавливаем Cordova и зависимости
-      - name: Install Dependencies
+      # 3. Устанавливаем Cordova и зависимости
+      - name: Install Cordova & dependencies
         run: |
           npm install -g cordova
           npm install
 
-      # Синхронизируем iOS проект через Capacitor
+      # 4. Синхронизируем iOS проект через Capacitor
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
-      # Архивируем проект через xcodebuild
+      # 5. Архивируем проект через xcodebuild
       - name: Build iOS Archive
         run: |
           cd ios/App
           mkdir -p build
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
+          xcodebuild -workspace MyApp.xcworkspace \
+            -scheme MyApp \
             -sdk iphoneos \
             -configuration Release \
-            archive -archivePath $PWD/build/App.xcarchive
+            archive -archivePath build/MyApp.xcarchive
 
-      # Экспортируем .ipa
+      # 6. Экспортируем .ipa
       - name: Export .ipa
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -48,14 +48,13 @@ jobs:
         run: |
           cd ios/App
           xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
+            -archivePath build/MyApp.xcarchive \
             -exportOptionsPlist exportOptions.plist \
             -exportPath build
 
-      # Загружаем артефакт .ipa
+      # 7. Загружаем артефакт .ipa
       - name: Upload .ipa artifact
         uses: actions/upload-artifact@v3
         with:
           name: myapp-ipa
           path: ios/App/build/*.ipa
- 
