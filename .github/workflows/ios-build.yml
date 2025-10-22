@@ -3,42 +3,59 @@ name: Build iOS Cordova
 on:
   push:
     branches:
-      - main
+      - main  # билд будет запускаться при пуше в main
 
 jobs:
   build:
     runs-on: macos-latest
+
     steps:
+      # Клонируем репозиторий
       - uses: actions/checkout@v3
 
+      # Устанавливаем Node.js
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
+      # Устанавливаем Cordova и зависимости
       - name: Install Dependencies
         run: |
           npm install -g cordova
           npm install
 
+      # Синхронизируем iOS проект через Capacitor
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
-      - name: Build iOS
+      # Архивируем проект через xcodebuild
+      - name: Build iOS Archive
         run: |
           cd ios/App
+          mkdir -p build
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -sdk iphoneos \
             -configuration Release \
             archive -archivePath $PWD/build/App.xcarchive
 
+      # Экспортируем .ipa
       - name: Export .ipa
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
         run: |
+          cd ios/App
           xcodebuild -exportArchive \
-            -archivePath ios/App/build/App.xcarchive \
+            -archivePath build/App.xcarchive \
             -exportOptionsPlist exportOptions.plist \
-            -exportPath ios/App/build
+            -exportPath build
+
+      # Загружаем артефакт .ipa
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: myapp-ipa
+          path: ios/App/build/*.ipa
+ 
