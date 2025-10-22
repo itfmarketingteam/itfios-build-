@@ -29,16 +29,24 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
-      # 5. Архивируем проект через xcodebuild
+      # 5. Архивируем проект через xcodebuild с автоматическим поиском workspace и scheme
       - name: Build iOS Archive
         run: |
           cd ios/App
           mkdir -p build
-          xcodebuild -workspace MyApp.xcworkspace \
-            -scheme MyApp \
+          WORKSPACE=$(ls *.xcworkspace | head -n 1)
+          if [ -z "$WORKSPACE" ]; then
+            echo "Error: No .xcworkspace found in ios/App"
+            exit 1
+          fi
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          echo "Using workspace: $WORKSPACE"
+          echo "Using scheme: $SCHEME"
+          xcodebuild -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
             -sdk iphoneos \
             -configuration Release \
-            archive -archivePath build/MyApp.xcarchive
+            archive -archivePath build/"$SCHEME".xcarchive
 
       # 6. Экспортируем .ipa
       - name: Export .ipa
@@ -47,8 +55,10 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
         run: |
           cd ios/App
+          WORKSPACE=$(ls *.xcworkspace | head -n 1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
           xcodebuild -exportArchive \
-            -archivePath build/MyApp.xcarchive \
+            -archivePath build/"$SCHEME".xcarchive \
             -exportOptionsPlist exportOptions.plist \
             -exportPath build
 
