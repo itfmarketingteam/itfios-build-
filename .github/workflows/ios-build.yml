@@ -1,70 +1,37 @@
-name: Build iOS Cordova
+name: Build iOS
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  build:
+  build-ios:
     runs-on: macos-latest
-
     steps:
-      # 1. Клонируем репозиторий
       - uses: actions/checkout@v3
 
-      # 2. Устанавливаем Node.js
-      - name: Setup Node.js
+      - name: Use Node.js 20
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      # 3. Устанавливаем Cordova и зависимости
-      - name: Install Cordova & dependencies
+      - name: Install dependencies
         run: |
-          npm install -g cordova
-          npm install
+          npm ci
+          npm install -g @capacitor/cli
 
-      # 4. Синхронизируем iOS проект через Capacitor
-      - name: Sync Capacitor iOS
-        run: npx cap sync ios
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods
+          cd ios/App
+          pod install
 
-      # 5. Архивируем проект через xcodebuild с автоматическим поиском workspace и scheme
-      - name: Build iOS Archive
+      - name: Build iOS
         run: |
           cd ios/App
           mkdir -p build
-          WORKSPACE=$(ls *.xcworkspace | head -n 1)
-          if [ -z "$WORKSPACE" ]; then
-            echo "Error: No .xcworkspace found in ios/App"
-            exit 1
-          fi
-          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
-          echo "Using workspace: $WORKSPACE"
-          echo "Using scheme: $SCHEME"
-          xcodebuild -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
+          xcodebuild -workspace MyApp.xcworkspace \
+            -scheme MyApp \
             -sdk iphoneos \
             -configuration Release \
-            archive -archivePath build/"$SCHEME".xcarchive
-
-      # 6. Экспортируем .ipa
-      - name: Export .ipa
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-        run: |
-          cd ios/App
-          WORKSPACE=$(ls *.xcworkspace | head -n 1)
-          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
-          xcodebuild -exportArchive \
-            -archivePath build/"$SCHEME".xcarchive \
-            -exportOptionsPlist exportOptions.plist \
-            -exportPath build
-
-      # 7. Загружаем артефакт .ipa
-      - name: Upload .ipa artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: myapp-ipa
-          path: ios/App/build/*.ipa
+            archive -archivePath build/MyApp.xcarchive
