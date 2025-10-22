@@ -54,7 +54,7 @@ jobs:
 
       # 7. Загружаем артефакт .ipa
       - name: Upload .ipa artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: myapp-ipa
           path: ios/App/build/*.ipa
